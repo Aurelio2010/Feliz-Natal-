@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Feliz Ano Novo 🎆</title>
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  background: radial-gradient(circle at bottom, #020024, #000);
+  height: 100vh;
+  overflow: hidden;
+  color: white;
+}
+
+#container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  z-index: 10;
+  width: 90%;
+  max-width: 420px;
+}
+
+h1 {
+  font-size: 2.4em;
+  animation: brilho 2s infinite alternate;
+}
+
+@keyframes brilho {
+  from { text-shadow: 0 0 10px gold; }
+  to { text-shadow: 0 0 30px white; }
+}
+
+#pergunta {
+  margin-top: 20px;
+  font-size: 18px;
+}
+
+input {
+  width: 100%;
+  margin-top: 15px;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  font-size: 16px;
+  outline: none;
+}
+
+button {
+  margin-top: 15px;
+  padding: 12px;
+  width: 100%;
+  border-radius: 10px;
+  border: none;
+  background: gold;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/* Nome do autor no canto inferior direito */
+#autor {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  color: gold;
+  font-size: 16px;
+  z-index: 20;
+  font-weight: bold;
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="fogos"></canvas>
+
+<div id="container">
+  <h1>🎉 Feliz Ano Novo! 🎉</h1>
+  <div id="pergunta">Qual é o seu nome?</div>
+  <input id="resposta" placeholder="Digite aqui">
+  <button onclick="proximo()">Continuar</button>
+</div>
+
+<div id="autor">Autor: Mivaldo</div>
+
+<!-- EMAILJS -->
+<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+<script>
+  emailjs.init("R5-4FRCx6UA89RPg7");
+</script>
+
+<script>
+// 🎆 FOGOS DE ARTIFÍCIO
+const canvas = document.getElementById("fogos");
+const ctx = canvas.getContext("2d");
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let fogos = [];
+
+function criarFogo() {
+  const x = Math.random() * canvas.width;
+  const y = Math.random() * canvas.height / 2;
+  const cores = ["red","yellow","cyan","lime","magenta","orange"];
+
+  for (let i = 0; i < 70; i++) {
+    fogos.push({
+      x, y,
+      dx:(Math.random()-0.5)*6,
+      dy:(Math.random()-0.5)*6,
+      r:Math.random()*3+1,
+      cor:cores[Math.floor(Math.random()*cores.length)],
+      vida:100
+    });
+  }
+}
+
+function animar() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  fogos.forEach((f,i)=>{
+    ctx.beginPath();
+    ctx.arc(f.x,f.y,f.r,0,Math.PI*2);
+    ctx.fillStyle=f.cor;
+    ctx.fill();
+    f.x+=f.dx;
+    f.y+=f.dy;
+    f.vida--;
+    if(f.vida<=0) fogos.splice(i,1);
+  });
+  requestAnimationFrame(animar);
+}
+
+setInterval(criarFogo,700);
+animar();
+
+// 📋 PERGUNTAS UMA POR UMA
+let passo = 0;
+let dados = {};
+
+function proximo() {
+  const input = document.getElementById("resposta");
+  const valor = input.value.trim();
+
+  if (!valor) {
+    alert("Este campo é obrigatorio");
+    return;
+  }
+
+  if (passo === 0) {
+    dados.nome = valor;
+    document.getElementById("pergunta").innerText =
+      "Você gostou de conhecer o Mivaldo?";
+    input.value = "";
+    passo++;
+  }
+  else if (passo === 1) {
+    dados.gostou = valor;
+    document.getElementById("pergunta").innerText =
+      "Agora deixe uma mensagem de Ano Novo 🎆 para Mivaldo";
+    input.value = "";
+    passo++;
+  }
+  else {
+    dados.mensagem = valor;
+    enviarEmail();
+  }
+}
+
+function enviarEmail() {
+  emailjs.send("service_e259imu", "template_x3xb4zv", {
+    name: dados.nome,
+    resposta1: dados.gostou,
+    mensagem: dados.mensagem,
+    email: "anonimo@email.com"
+  })
+  .then(() => {
+    document.getElementById("container").innerHTML = `
+      <h1>🎆 Obrigado, ${dados.nome}! 🎆</h1>
+      <p>Sua mensagem de Ano Novo foi enviada com sucesso 💌</p>
+    `;
+  })
+  .catch(() => {
+    alert("Erro ao enviar 😢");
+  });
+}
+</script>
+
+</body>
+</html>
